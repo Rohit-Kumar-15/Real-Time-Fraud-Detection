@@ -22,47 +22,46 @@ public class FraudService {
 
     public double predictFraud(Transaction tx) throws OrtException {
 
-        // ✅ Compute engineered features (same as Python)
-        float Eorig = (float) (tx.getNewbalanceOrg() + tx.getAmount() - tx.getOldbalanceOrg());
-        float Edest = (float) (tx.getOldbalanceDest() + tx.getAmount() - tx.getNewbalanceDest());
+    // Compute engineered features
+    float Eorig = (float) (tx.getNewbalanceOrg() + tx.getAmount() - tx.getOldbalanceOrg());
+    float Edest = (float) (tx.getOldbalanceDest() + tx.getAmount() - tx.getNewbalanceDest());
 
-        // ✅ Input feature vector (total = 9)
-        float[] input = new float[]{
-                (float) tx.getStep(),
-                encodeType(tx.getType()),
-                (float) tx.getAmount(),
-                (float) tx.getOldbalanceOrg(),
-                (float) tx.getNewbalanceOrg(),
-                (float) tx.getOldbalanceDest(),
-                (float) tx.getNewbalanceDest(),
-                Eorig,
-                Edest
-        };
+    // Input feature vector [1 x 9]
+    float[] input = new float[]{
+            (float) tx.getStep(),
+            encodeType(tx.getType()),
+            (float) tx.getAmount(),
+            (float) tx.getOldbalanceOrg(),
+            (float) tx.getNewbalanceOrg(),
+            (float) tx.getOldbalanceDest(),
+            (float) tx.getNewbalanceDest(),
+            Eorig,
+            Edest
+    };
 
-        // ✅ Wrap into 2D tensor [1 x 9]
-        float[][] inputData = new float[1][input.length];
-        inputData[0] = input;
+    float[][] inputData = new float[1][input.length];
+    inputData[0] = input;
 
-        String inputName = session.getInputNames().iterator().next();
+    String inputName = session.getInputNames().iterator().next();
 
-        try (OnnxTensor inputTensor = OnnxTensor.createTensor(env, inputData)) {
-            Map<String, OnnxTensor> inputs = Map.of(inputName, inputTensor);
+    try (OnnxTensor inputTensor = OnnxTensor.createTensor(env, inputData)) {
+        Map<String, OnnxTensor> inputs = Map.of(inputName, inputTensor);
 
-            try (OrtSession.Result result = session.run(inputs)) {
-                Object value = result.get(0).getValue();
+        try (OrtSession.Result result = session.run(inputs)) {
+            // ✅ Use probabilities output (index 1)
+            Object probValue = result.get(1).getValue();
 
-                // Handle different possible output types
-                if (value instanceof float[][] floats) return floats[0][0];
-                if (value instanceof float[] floats) return floats[0];
-                if (value instanceof double[][] doubles) return doubles[0][0];
-                if (value instanceof double[] doubles) return doubles[0];
-                if (value instanceof long[][] longs) return longs[0][0];
-                if (value instanceof long[] longs) return longs[0];
-
-                throw new IllegalStateException("Unsupported output type: " + value.getClass());
+            if (probValue instanceof float[][] floats) {
+                return floats[0][1];  // probability of fraud
+            } else if (probValue instanceof double[][] doubles) {
+                return doubles[0][1];
+            } else {
+                throw new IllegalStateException("Unsupported output type: " + probValue.getClass());
             }
         }
     }
+}
+
 
     // ✅ FIXED: Match Python's LabelEncoder alphabetical ordering
     private float encodeType(String type) {
