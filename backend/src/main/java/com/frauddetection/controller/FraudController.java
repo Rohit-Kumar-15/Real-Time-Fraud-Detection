@@ -5,7 +5,7 @@ import com.frauddetection.model.FraudResponse;
 import com.frauddetection.service.FraudService;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://real-time-fraud-detection.vercel.app/")
 @RestController
 @RequestMapping("/api")
 public class FraudController {
