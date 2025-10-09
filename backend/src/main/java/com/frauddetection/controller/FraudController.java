@@ -20,7 +20,8 @@ public class FraudController {
     public FraudResponse predict(@RequestBody Transaction tx) {
         try {
             double probability = fraudService.predictFraud(tx);
-            boolean isFraud = probability >= 0.5;
+            boolean isFraud = probability >= 0.3;
+            System.out.println("Predicted probability of fraud: " + probability);
             return new FraudResponse(probability, isFraud);
         } catch (Exception e) {
             e.printStackTrace();
