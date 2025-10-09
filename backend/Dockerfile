@@ -1,4 +1,3 @@
-# Use official OpenJDK 17 image
 FROM openjdk:21-jdk-slim
 
 # Set working directory

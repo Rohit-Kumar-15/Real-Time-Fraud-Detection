@@ -48,7 +48,7 @@ export default function FraudDetectDashboard() {
 
     try {
       const response = await axios.post<PredictionResponse>(
-        'http://localhost:8080/api/predict',
+        'https://real-time-fraud-detection-1-8s65.onrender.com/api/predict',
         {
           step: Number(formData.step),
           type: formData.type,
